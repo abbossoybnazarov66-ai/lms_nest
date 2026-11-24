@@ -1,9 +1,8 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { pool } from '../database/db';
 import argon from "argon2"
 import { CreateTeacherDto } from './dto/create.teachers.dto';
 import { UpdateTeacherDto } from './dto/updete.teachers.dto';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../core/database/prisma.service';
 
 
 @Injectable()

@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import argon from "argon2"
 import { CreateStaffDto } from './dto/create-staff.dto';
 import { UpdateStaffDto } from './dto/update-staff.dto';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../core/database/prisma.service';
 
 @Injectable()
 export class staffService {
