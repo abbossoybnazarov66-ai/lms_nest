@@ -1,16 +1,18 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException, UseGuards } from '@nestjs/common';
 import argon from 'argon2';
-import { PrismaService } from '../core/database/prisma.service';
+import { PrismaService } from '../../core/database/prisma.service';
+import { Role } from '../../generated/prisma/enums';
 import { CreateStudentDto } from './dto/create-student.dto';
 import { UpdateStudentDto } from './dto/update-student.dto';
+
 
 @Injectable()
 export class StudentsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getStudents() {
-    const students = await this.prisma.student.findMany({
-      where: { status: 'active' },
+    const students = await this.prisma.user.findMany({
+      where: { status: 'active',role : Role.STUDENT },
       omit: { password: true },
     });
 
@@ -18,8 +20,8 @@ export class StudentsService {
   }
 
   async getOneStudent(id: number) {
-    const student = await this.prisma.student.findUnique({
-      where: { id },
+    const student = await this.prisma.user.findUnique({
+      where: { id,role : Role.STUDENT },
       omit: { password: true },
     });
 
@@ -32,19 +34,26 @@ export class StudentsService {
 
 
   async createStudent(payload: CreateStudentDto) {
-    const hashedPassword = await argon.hash(payload.password);
-
-    const student = await this.prisma.student.create({
-      data: { ...payload, password: hashedPassword },
+    const exists = await this.prisma.user.findUnique({
+    where: { phone: payload.phone },
+  });
+  if (exists) {
+    throw new ConflictException("Bu telefon raqam allaqachon ro'yxatdan o'tgan");
+  }
+   const hashedPassword = await argon.hash(payload.password);
+   
+    const student = await this.prisma.user.create({
+      data: { ...payload, password: hashedPassword,role : Role.STUDENT },
       omit: { password: true },
     });
+    
 
     return { message: "O'quvchi yaratildi", data: student };
   }
 
 
   async updateStudent(id: number, payload: UpdateStudentDto) {
-    const student = await this.prisma.student.findUnique({ where: { id } });
+    const student = await this.prisma.user.findUnique({ where: { id,role : Role.STUDENT } });
 
     if (!student) {
       throw new NotFoundException(`${id}-raqamli o'quvchi topilmadi`);
@@ -54,7 +63,7 @@ export class StudentsService {
       payload.password = await argon.hash(payload.password);
     }
 
-    const updated = await this.prisma.student.update({
+    const updated = await this.prisma.user.update({
       where: { id },
       data: payload,
       omit: { password: true },
@@ -65,13 +74,13 @@ export class StudentsService {
 
   
   async deleteStudent(id: number) {
-    const student = await this.prisma.student.findUnique({ where: { id } });
+    const student = await this.prisma.user.findUnique({ where: { id,role : Role.STUDENT } });
 
     if (!student) {
       throw new NotFoundException(`${id}-raqamli o'quvchi topilmadi`);
     }
 
-    await this.prisma.student.update({
+    await this.prisma.user.update({
       where: { id },
       data: { status: 'inactive' },
     });

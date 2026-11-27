@@ -1,4 +1,5 @@
-import { IsNotEmpty, IsOptional, IsString, Matches, MinLength } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsString, Matches, MinLength } from 'class-validator';
+import { Role } from '../../../generated/prisma/client';
 
 export class CreateStaffDto {
   @IsString()
@@ -17,9 +18,10 @@ export class CreateStaffDto {
   @MinLength(4)
   password: string;
 
-  @IsString()
-  @IsNotEmpty()
-  role: string;
+  @IsEnum(Role, {
+    message: "Rol faqat ADMIN, MENTOR, ASSISTANT yoki STUDENT bo'lishi mumkin",
+  })
+  role: Role;
 
   @IsOptional()
   @IsString()
